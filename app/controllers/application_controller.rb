@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::API
     include ActionController::Helpers
+    include ActionController::Cookies
     helper_method :current_user
   
     def authenticate

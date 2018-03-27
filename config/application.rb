@@ -31,6 +31,7 @@ module YoutubeStatsApi
     config.api_only = true
     # To Omniauth with Rails API needs to return a session to middleware stack:
     config.middleware.insert_after ActiveRecord::Migration::CheckPending, ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Cookies
     config.middleware.insert_after ActionDispatch::Cookies, ActionDispatch::Session::CookieStore
 
   end
