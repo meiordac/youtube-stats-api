@@ -5,86 +5,135 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
     crossorigin="anonymous">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script src="helpers.js"></script>
 <script src="key.js"></script>
 <script type="text/babel">
-
 class Home extends React.Component {
-
-    render() {
-        const userToken = getCookie('user_token');
-        console.log(document.cookie);
-        if (userToken) {
-            return <LiveStreamForm />; 
-        }
-        return <Login />;
+  render() {
+    const userToken = getCookie("user_token");
+    console.log(document.cookie);
+    if (userToken) {
+      return <LiveStreamForm />;
     }
+    return <Login />;
+  }
 }
 
 class Login extends React.Component {
-    render() {
-        return (<div><h1> Welcome, please login to continue </h1> <a href="http://localhost:3000/auth/google_oauth2">Sign in with Google</a></div>);
-    }
-}
-
-class LiveStreamForm extends React.Component {
-
-  constructor(props) {
-    super(props);
-    this.messages = [];
-  }  
-
-
-
-handleClick(event) {
-    console.log(event);
-    event.preventDefault();
-    this.getVideo(event.target.value);
-  }
-
-  getVideo(value) {
-    const token = getCookie('user_token');
-    const videosRequest = `https://www.googleapis.com/youtube/v3/liveStreams?part=snippet%2CcontentDetails%2Cstatistics%2CliveStreamingDetails&id=${value}&key=${apiKey}`;
-    let liveChatId;
-    axios.get(videosRequest, { headers: {'Authorization' : `Bearer ${token}`}})
-        .then(response => {
-            console.log(response);
-            liveChatId = response.items[0].liveStreamingDetails.activeLiveChatId;
-            this.getMessages(liveChatId);
-        });
-  }
-
-  getMessages(liveChatId) {
-    const token = getCookie('user_token');
-    const liveMessagesRequest = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=id%2C+snippet%2C+authorDetails&key=${apiKey}`;
-    axios.get(liveMessagesRequest, { headers: {'Authorization' : `Bearer ${token}`}})
-        .then(response => {
-                console.log(response);
-                this.messages = response.items;
-            });
-  }
-
   render() {
     return (
-        <div className="card">
-            <div className="card-body">
-                <div className="form-group">
-                        <label htmlFor="liveVideo">Live video stream id</label>
-                        <input className="form-control" id="liveVideo" placeholder="Enter live video stream id"></input>
-                        <button className="btn-primary" onClick={ this.handleClick.bind(this) }>
-                        Submit
-                    </button>
-                </div>
-            </div>
-        </div>
+      <div className="container">
+        <h1> Welcome, please login to continue </h1>{" "}
+        <a className="btn btn-primary" href="http://localhost:3000/auth/google_oauth2">
+          Sign in with Google
+        </a>
+      </div>
     );
   }
 }
 
-ReactDOM.render(
-    <Home />,
-    document.getElementById('root')
-);
+class ChatList extends React.Component {
+  render() {
+    return <ul className="list-group">{this.createList()}</ul>;
+  }
 
+  createList() {
+    const list = [];
+    for (var i = 0; i < this.props.messages.length; i++) {
+      list.push(
+        <li className="list-group-item" key={i}>
+          {this.props.messages[i].name} {this.props.messages[i].content}
+        </li>
+      );
+    }
+    console.log(list);
+    return list;
+  }
+}
+
+class LiveStreamForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.messages = [];
+    this.name = '';
+  }
+
+  handleClick(event) {
+    event.preventDefault();
+    this.getVideo();
+  }
+
+  handleName(e) {
+   this.setState({name: e.target.value});
+    }
+  
+
+  getVideo() {
+    const token = getCookie("user_token");
+    const videosRequest = `https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet&mine=true&key=${apiKey}`;
+
+    axios
+      .get(videosRequest, { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => {
+        const item = response.data.items[0];
+        const liveChatId = item.snippet.liveChatId;
+        console.log(liveChatId);
+        this.getMessages(liveChatId);
+      });
+  }
+
+  getMessages(liveChatId) {
+    const token = getCookie("user_token");
+    const liveMessagesRequest = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=id%2C+snippet%2C+authorDetails&key=${apiKey}`;
+    axios
+      .get(liveMessagesRequest, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(response => {
+        console.log(response);
+        response.data.items.map(item => {
+          this.messages.push({
+            name: item.authorDetails.displayName,
+            content: item.snippet.displayMessage
+          });
+        });
+        console.log(this.messages);
+        if(this.name) {
+            this.messages = this.messages.filter((message) => message.name === this.name)
+        }
+        this.forceUpdate();
+      });
+  }
+
+  render() {
+    if (this.messages.length > 0) {
+      return (
+        <div className="container">
+          <ChatList messages={this.messages} />
+        </div>
+      );
+    }
+
+    return (
+      <div className="container">
+        <div className="form-group">
+          <label htmlFor="userName">Return all chat messages from a given username</label>
+          <input
+            className="form-control"
+            id="userName"
+            placeholder="User name for chat messages"
+            value={this.state.name} 
+            onChange={this.handleName}
+
+          />
+          <button className="btn btn-primary" onClick={this.handleClick.bind(this)}>
+            Submit
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Home />, document.getElementById("root"));
 </script>
