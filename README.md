@@ -5,6 +5,19 @@ join a live video stream. Once in the stream, it should stream all chat messages
 and update live. Store these messages and create another interface that will
 return all chat messages from a given username.
 
+## Notes
+
+## Back-end
+
+Please  (1) avoid doing all the work client side, (2) for sever side do not use any JS/node code.
+Also let us know how comfortable you are with the chosen language so
+we can take that into consideration as we are reading through your code.
+
+## Front-end
+
+The front-end should be a single `index.html` file linking to external CSS/JS.
+Psst, this is a good chance to flex your CSS3 or HTML5 knowledge.
+
 
 * Configuration
 
