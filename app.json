@@ -1,0 +1,6 @@
+{
+    "name": "Youtube Stats",
+    "description": "webapp that allows users to login with their Youtube/Google account.",
+    "repository": "https://github.com/meiordac/youtube-stats-api",
+    "keywords": ["rails", "ruby"]
+  }

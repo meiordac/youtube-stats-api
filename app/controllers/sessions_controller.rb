@@ -6,6 +6,7 @@ class SessionsController < ApplicationController
         session[:user_id] = @user.id
         cookies[:user_uid] = @user.uid
         cookies[:user_token] = @user.oauth_token
+        cookies[:user_token] = { :value => @user.oauth_token, :expires => @user.oauth_expires_at }
         redirect_to root_path
     end
   
